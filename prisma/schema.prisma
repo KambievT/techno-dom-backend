@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  oldPrice    Float?
+  imageUrl    String?
+  category    String
+  inStock     Boolean  @default(true)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  slug String @unique
+}
+
+model FilterGroup {
+  id      Int            @id @default(autoincrement())
+  name    String
+  key     String         @unique
+  type    String         // "checkbox" | "select" | "range"
+  options FilterOption[]
+}
+
+model FilterOption {
+  id            Int         @id @default(autoincrement())
+  label         String
+  value         String
+  filterGroupId Int
+  filterGroup   FilterGroup @relation(fields: [filterGroupId], references: [id], onDelete: Cascade)
+}
