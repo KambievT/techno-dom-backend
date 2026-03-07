@@ -11,10 +11,13 @@ export const minioClient = new Client({
 export const BUCKET_NAME = process.env.MINIO_BUCKET || "products";
 
 export function getImageUrl(filename: string): string {
-  const protocol = process.env.MINIO_USE_SSL === "true" ? "https" : "http";
+  const useSSL = process.env.MINIO_USE_SSL === "true";
+  const protocol = useSSL ? "https" : "http";
   const endpoint = process.env.MINIO_ENDPOINT || "localhost";
   const port = process.env.MINIO_PORT || "9000";
-  return `${protocol}://${endpoint}:${port}/${BUCKET_NAME}/${filename}`;
+  const defaultPort = useSSL ? "443" : "80";
+  const portSuffix = port === defaultPort ? "" : `:${port}`;
+  return `${protocol}://${endpoint}${portSuffix}/${BUCKET_NAME}/${filename}`;
 }
 
 export async function ensureBucket(): Promise<void> {
