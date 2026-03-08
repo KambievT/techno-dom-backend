@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { timingSafeEqual } from "crypto";
 
-export async function login(req: Request, res: Response) {
+export function login(req: Request, res: Response) {
   const { password } = req.body as { password?: string };
 
   if (!password) {
@@ -10,16 +10,17 @@ export async function login(req: Request, res: Response) {
     return;
   }
 
-  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const adminPassword = process.env.ADMIN_PASSWORD;
   const secret = process.env.JWT_SECRET;
 
-  if (!hash || !secret) {
+  if (!adminPassword || !secret) {
     res.status(500).json({ error: "Auth not configured" });
     return;
   }
 
-  const valid = await bcrypt.compare(password, hash);
-  if (!valid) {
+  const a = Buffer.from(password);
+  const b = Buffer.from(adminPassword);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     res.status(401).json({ error: "Invalid password" });
     return;
   }
