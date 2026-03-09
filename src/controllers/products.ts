@@ -69,6 +69,19 @@ export async function getProducts(
       },
     });
   } catch (err) {
+    // If ProductImage table is missing, return clearer message
+    if (
+      (err as any)?.code === "P2021" &&
+      (err as any)?.meta?.modelName === "Product"
+    ) {
+      // eslint-disable-next-line no-console
+      console.error("Prisma schema error (ProductImage table missing):", err);
+      res.status(500).json({
+        error:
+          "Database schema mismatch: ProductImage table is missing. Apply Prisma migrations (prisma migrate) or run prisma db push.",
+      });
+      return;
+    }
     next(err);
   }
 }
@@ -96,6 +109,21 @@ export async function getProductById(
 
     res.json(product);
   } catch (err) {
+    if (
+      (err as any)?.code === "P2021" &&
+      (err as any)?.meta?.table === "public.ProductImage"
+    ) {
+      // eslint-disable-next-line no-console
+      console.error(
+        "Prisma schema error (ProductImage table missing) on update:",
+        err,
+      );
+      res.status(500).json({
+        error:
+          "Database schema mismatch: ProductImage table is missing. Apply Prisma migrations (prisma migrate) or run prisma db push.",
+      });
+      return;
+    }
     next(err);
   }
 }
