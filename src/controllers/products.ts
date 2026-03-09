@@ -129,6 +129,7 @@ export async function createProduct(
       inStock,
       rating,
       reviewCount,
+      addressId,
     } = req.body;
 
     if (
@@ -165,6 +166,10 @@ export async function createProduct(
         inStock: parseBool(inStock, true),
         rating: rating !== undefined ? parseFloat(rating) : 0,
         reviewCount: reviewCount !== undefined ? parseInt(reviewCount, 10) : 0,
+        addressId:
+          addressId !== undefined && addressId !== ""
+            ? Number(addressId)
+            : null,
       },
     });
 
@@ -201,6 +206,7 @@ export async function updateProduct(
       inStock,
       rating,
       reviewCount,
+      addressId,
     } = req.body;
 
     const data: Prisma.ProductUpdateInput = {};
@@ -216,6 +222,8 @@ export async function updateProduct(
     if (rating !== undefined) data.rating = parseFloat(rating);
     if (reviewCount !== undefined) data.reviewCount = parseInt(reviewCount, 10);
     if (req.file) data.imageUrl = await uploadImageToMinio(req.file);
+    if (addressId !== undefined)
+      data.addressId = addressId === "" ? null : Number(addressId);
 
     const product = await prisma.product.update({ where: { id }, data });
     res.json(product);
