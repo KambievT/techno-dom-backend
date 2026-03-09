@@ -198,6 +198,8 @@ export async function updateProduct(
       return;
     }
 
+    console.log("Request body:", req.body);
+
     const {
       name,
       description,
@@ -224,7 +226,10 @@ export async function updateProduct(
     if (reviewCount !== undefined) data.reviewCount = parseInt(reviewCount, 10);
     if (req.file) data.imageUrl = await uploadImageToMinio(req.file);
     if (addressId !== undefined)
-      data.addressId = addressId === "" ? null : Number(addressId);
+      data.address =
+        addressId === ""
+          ? { disconnect: true }
+          : { connect: { id: Number(addressId) } };
 
     const product = await prisma.product.update({
       where: { id },
