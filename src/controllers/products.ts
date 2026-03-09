@@ -85,7 +85,10 @@ export async function getProductById(
       return;
     }
 
-    const product = await prisma.product.findUnique({ where: { id } });
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { address: true },
+    });
     if (!product) {
       res.status(404).json({ error: "Product not found" });
       return;
@@ -150,7 +153,20 @@ export async function createProduct(
       return;
     }
 
-    const imageUrl = req.file ? await uploadImageToMinio(req.file) : null;
+    // Support multiple uploaded files (req.files) or single (req.file)
+    const files =
+      (req.files as Express.Multer.File[]) ??
+      (req.file ? [req.file as Express.Multer.File] : []);
+
+    const uploaded: { url: string; filename?: string }[] = [];
+    if (files && files.length > 0) {
+      for (const f of files) {
+        const url = await uploadImageToMinio(f);
+        uploaded.push({ url, filename: f.originalname });
+      }
+    }
+
+    const imageUrl = uploaded.length > 0 ? uploaded[0].url : null;
 
     const product = await prisma.product.create({
       data: {
@@ -170,8 +186,16 @@ export async function createProduct(
           addressId !== undefined && addressId !== ""
             ? Number(addressId)
             : null,
+        images: uploaded.length
+          ? {
+              create: uploaded.map((u) => ({
+                url: u.url,
+                filename: u.filename,
+              })),
+            }
+          : undefined,
       },
-      include: { address: true },
+      include: { address: true, images: true },
     });
 
     res.status(201).json(product);
@@ -224,7 +248,23 @@ export async function updateProduct(
       data.inStock = parseBool(inStock, existing.inStock);
     if (rating !== undefined) data.rating = parseFloat(rating);
     if (reviewCount !== undefined) data.reviewCount = parseInt(reviewCount, 10);
-    if (req.file) data.imageUrl = await uploadImageToMinio(req.file);
+    // Handle multiple uploaded files when updating
+    const newFiles =
+      (req.files as Express.Multer.File[]) ??
+      (req.file ? [req.file as Express.Multer.File] : []);
+    if (newFiles && newFiles.length > 0) {
+      const uploaded: { url: string; filename?: string }[] = [];
+      for (const f of newFiles) {
+        const url = await uploadImageToMinio(f);
+        uploaded.push({ url, filename: f.originalname });
+      }
+      // set main image to first uploaded
+      data.imageUrl = uploaded[0].url;
+      // attach additional images
+      data.images = {
+        create: uploaded.map((u) => ({ url: u.url, filename: u.filename })),
+      } as any;
+    }
     if (addressId !== undefined)
       data.address =
         addressId === ""
@@ -234,7 +274,7 @@ export async function updateProduct(
     const product = await prisma.product.update({
       where: { id },
       data,
-      include: { address: true },
+      include: { address: true, images: true },
     });
     res.json(product);
   } catch (err) {
