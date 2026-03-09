@@ -54,7 +54,7 @@ export async function getProducts(
         skip,
         take: pageSize,
         orderBy: { [sortField]: sortOrder },
-        include: { address: true },
+        include: { address: true, images: true },
       }),
       prisma.product.count({ where }),
     ]);
@@ -100,7 +100,7 @@ export async function getProductById(
 
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { address: true },
+      include: { address: true, images: true },
     });
     if (!product) {
       res.status(404).json({ error: "Product not found" });
