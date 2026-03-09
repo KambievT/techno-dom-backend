@@ -54,6 +54,7 @@ export async function getProducts(
         skip,
         take: pageSize,
         orderBy: { [sortField]: sortOrder },
+        include: { address: true },
       }),
       prisma.product.count({ where }),
     ]);
@@ -247,4 +248,3 @@ export async function deleteProduct(
     next(err);
   }
 }
-
