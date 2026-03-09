@@ -7,6 +7,7 @@ import categoriesRouter from "./routes/categories";
 import filtersRouter from "./routes/filters";
 import uploadRouter from "./routes/upload";
 import authRouter from "./routes/auth";
+import addressRouter from "./routes/address";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/products", productsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/filters", filtersRouter);
 app.use("/api/upload", uploadRouter);
+app.use("/api/addresses", addressRouter);
 
 app.use(errorHandler);
 
