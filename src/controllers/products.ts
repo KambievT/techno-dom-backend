@@ -171,6 +171,7 @@ export async function createProduct(
             ? Number(addressId)
             : null,
       },
+      include: { address: true },
     });
 
     res.status(201).json(product);
@@ -225,7 +226,11 @@ export async function updateProduct(
     if (addressId !== undefined)
       data.addressId = addressId === "" ? null : Number(addressId);
 
-    const product = await prisma.product.update({ where: { id }, data });
+    const product = await prisma.product.update({
+      where: { id },
+      data,
+      include: { address: true },
+    });
     res.json(product);
   } catch (err) {
     next(err);
