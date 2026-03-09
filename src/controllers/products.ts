@@ -161,8 +161,17 @@ export async function createProduct(
     const uploaded: { url: string; filename?: string }[] = [];
     if (files && files.length > 0) {
       for (const f of files) {
-        const url = await uploadImageToMinio(f);
-        uploaded.push({ url, filename: f.originalname });
+        try {
+          // eslint-disable-next-line no-console
+          console.log(`Uploading file ${f.originalname} (${f.size} bytes)`);
+          const url = await uploadImageToMinio(f);
+          uploaded.push({ url, filename: f.originalname });
+        } catch (e) {
+          // Log and rethrow so errorHandler can capture stack
+          // eslint-disable-next-line no-console
+          console.error(`Failed to upload ${f.originalname}:`, e);
+          throw e;
+        }
       }
     }
 
@@ -255,8 +264,18 @@ export async function updateProduct(
     if (newFiles && newFiles.length > 0) {
       const uploaded: { url: string; filename?: string }[] = [];
       for (const f of newFiles) {
-        const url = await uploadImageToMinio(f);
-        uploaded.push({ url, filename: f.originalname });
+        try {
+          // eslint-disable-next-line no-console
+          console.log(
+            `Uploading (update) file ${f.originalname} (${f.size} bytes)`,
+          );
+          const url = await uploadImageToMinio(f);
+          uploaded.push({ url, filename: f.originalname });
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error(`Failed to upload (update) ${f.originalname}:`, e);
+          throw e;
+        }
       }
       // set main image to first uploaded
       data.imageUrl = uploaded[0].url;
